@@ -2,6 +2,7 @@ package dataaccess;
 
 import domain.Course;
 import domain.CourseType;
+import util.Assert;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -53,7 +54,19 @@ public class MySqlCourseRepository implements MyCourseRepository{
 
     @Override
     public Optional<Course> getById(Long id) {
+        Assert.notNull(id);
+
+
         return Optional.empty();
+    }
+
+    private int countCoursesInDbWithId(Long id)
+    {
+        String countSql = "SELECT COUNT(*) FROM `courses` WHERE `id`=?";
+        PreparedStatement preparedStatementCount = con.prepareStatement(countSql);
+        preparedStatementCount.setLong(1,id);
+        ResultSet resultSetCount = preparedStatementCount.executeQuery();
+        resultSetCount.next();
     }
 
     @Override
@@ -65,12 +78,21 @@ public class MySqlCourseRepository implements MyCourseRepository{
             ArrayList<Course> courseList = new ArrayList<>();
             while(resultSet.next())
             {
-
+                courseList.add( new Course(
+                        resultSet.getLong("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("description"),
+                        resultSet.getInt("hours"),
+                        resultSet.getDate("begindate"),
+                        resultSet.getDate("enddate"),
+                        CourseType.valueOf(resultSet.getString("coursetype"))
+                        )
+                );
             }
+            return courseList;
         } catch (SQLException e) {
             throw new DatabaseException("Database error occured!");
         }
-        return List.of();
     }
 
     @Override
