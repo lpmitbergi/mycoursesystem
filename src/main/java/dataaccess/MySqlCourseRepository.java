@@ -31,7 +31,31 @@ public class MySqlCourseRepository implements MyCourseRepository{
 
     @Override
     public List<Course> findAllCoursesByNameOrDescription(String searchText) {
-        return List.of();
+        try
+        {
+            String sql = "SELECT * FROM `courses` WHERE LOWER(`description`) LIKE LOWER(?) OR LOWER(`name`) LIKE LOWER(?)";
+            PreparedStatement preparedStatement = con.prepareStatement(sql);
+            preparedStatement.setString(1,"%"+searchText+"%");
+            preparedStatement.setString(2,"%"+searchText+"%");
+            ResultSet resultSet = preparedStatement.executeQuery();
+            ArrayList<Course> courseList = new ArrayList<>();
+            while(resultSet.next())
+            {
+                courseList.add(new Course(
+                        resultSet.getLong("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("description"),
+                        resultSet.getInt("hours"),
+                        resultSet.getDate("begindate"),
+                        resultSet.getDate("enddate"),
+                        CourseType.valueOf(resultSet.getString("coursetype"))
+                ));
+            }
+            return courseList;
+        }catch (SQLException sqlException)
+        {
+            throw new DatabaseException(sqlException.getMessage());
+        }
     }
 
     @Override
@@ -46,7 +70,28 @@ public class MySqlCourseRepository implements MyCourseRepository{
 
     @Override
     public List<Course> findAllRunningCourses() {
-        return List.of();
+        try {
+            String sql = "SELECT * FROM `courses` WHERE NOW()<`enddate`";
+            PreparedStatement preparedStatement = con.prepareStatement(sql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            ArrayList<Course> courseList = new ArrayList<>();
+            while (resultSet.next()) {
+                courseList.add(new Course(
+                        resultSet.getLong("id"),
+                        resultSet.getString("name"),
+                        resultSet.getString("description"),
+                        resultSet.getInt("hours"),
+                        resultSet.getDate("begindate"),
+                        resultSet.getDate("enddate"),
+                        CourseType.valueOf(resultSet.getString("coursetype"))
+                ));
+            }
+            return courseList;
+        }catch (SQLException sqlException)
+        {
+            throw new DatabaseException(sqlException.getMessage());
+        }
+
     }
 
     @Override
@@ -73,7 +118,7 @@ public class MySqlCourseRepository implements MyCourseRepository{
 
         if (generatedKeys.next())
         {
-            return this.getById(generatedKeys.getLong(1));
+            return this.getByID(generatedKeys.getLong(1));
         }else
         {
             return Optional.empty();
@@ -85,7 +130,7 @@ public class MySqlCourseRepository implements MyCourseRepository{
     }
 
     @Override
-    public Optional<Course> getById(Long id) {
+    public Optional<Course> getByID(Long id) {
         Assert.notNull(id);
         if(countCoursesInDbWithId(id)==0){
             return Optional.empty();
@@ -184,7 +229,7 @@ public class MySqlCourseRepository implements MyCourseRepository{
                     return Optional.empty();
                 } else
                 {
-                    return this.getById(entity.getId());
+                    return this.getByID(entity.getId());
                 }
             } catch (SQLException sqlException)
             {
@@ -194,7 +239,20 @@ public class MySqlCourseRepository implements MyCourseRepository{
     }
 
     @Override
-    public void deletById(Long id) {
-
+    public void deleteById(Long id) {
+        Assert.notNull(id);
+        String sql = "DELETE FROM `courses` WHERE `id` = ?";
+        try
+        {
+        if (countCoursesInDbWithId(id)==1)
+        {
+         PreparedStatement preparedStatement = con.prepareStatement(sql);
+         preparedStatement.setLong(1,id);
+         preparedStatement.executeUpdate();
+        }
+    }catch (SQLException sqlException)
+        {
+            throw new DatabaseException(sqlException.getMessage());
+        }
     }
 }

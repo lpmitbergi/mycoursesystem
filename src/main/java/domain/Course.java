@@ -15,21 +15,23 @@ public class Course extends BaseEntity {
     public Course(Long id, String name, String description, int hours, Date beginDate, Date endDate, CourseType courseType) throws InvalidValueException {
         super(id);
         this.setName(name);
+        this.setCourseType(courseType);
         this.setDescription(description);
         this.setHours(hours);
         this.setBeginDate(beginDate);
         this.setEndDate(endDate);
-        this.setCourseType(courseType);
+
     }
 
     public Course(String name, String description, int hours, Date beginDate, Date endDate, CourseType courseType) throws InvalidValueException {
         super(null);
         this.setName(name);
+        this.setCourseType(courseType);
         this.setDescription(description);
         this.setHours(hours);
         this.setBeginDate(beginDate);
         this.setEndDate(endDate);
-        this.setCourseType(courseType);
+
     }
 
     public String getName() {
